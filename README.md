@@ -15,6 +15,12 @@ macで圧縮ファイル(zip形式)を作るPHPプログラムです。
 * ShiftJISにない文字を自動で検出します。
 * .txtファイルを自動でwindowsの改行に変換します。
 
+# Forkによる改変点
+* 実行すると、追加でzipファイルを暗号化したうえでそのパスワードをクリップボードにコピーします。-n オプションを使うと暗号化しません。
+* 作成されるzipファイル名を`hogehoge.txt.zip`ではなく、`hogehoge.zip`としています。
+
+Forkの経緯については<a href="https://k8sinfo.com/2019/07/03/mac-windows-zip-with-encryption/">こちら</a>。
+
 # どうやって使うの？
 windowszipをダウンロードまたはコピペしてください。
 
