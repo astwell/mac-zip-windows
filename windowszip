@@ -4,6 +4,9 @@
 # mac zip alternative : windowszip 
 # ========================================
 # changelog:
+# Modifications from original(https://github.com/macyarounanoka/mac-zip-windows):
+#    - 出力ファイル名から元ファイルの拡張子を除去
+#    - zip暗号化機能の追加 
 */
 /* ---------------------------------------
  macからwindowsへ送ってもしっかり解凍できるZIPファイルを作るクラスです。
@@ -19,6 +22,8 @@
 */
 class WindowsZip{
     public $テキスト改行コンバート = true;
+    public $encryption = true;
+    public $password = "";
     function windowsFileName( $utf8 , $isfile=true){ 
         if( $isfile ){
             if( mb_ereg("[\\\\/\:\*\?\"<>|]", $utf8) ){
@@ -111,11 +116,13 @@ class WindowsZip{
         }
         $realpath = realpath( $pathtofileorfolder );
         $pathInfo = pathinfo($realpath); 
-        $parentPath = $pathInfo['dirname'];
+				$parentPath = $pathInfo['dirname'];
+				$filename = $pathInfo['filename'];
         $exclusiveLength = mb_strlen("$parentPath/",'utf8');
         $dirName = $pathInfo['basename']; 
         if( $pathtozipfile  == false ){
-            $pathtozipfile = $realpath . ".zip";
+					//$pathtozipfile = $realpath . ".zip";
+					$pathtozipfile = $parentPath . "/" . $filename . ".zip";
         }
         if( file_exists($pathtozipfile) ){
             if( $this->showDialog("確認","同名ZIPファイルが存在します。".PHP_EOL.$pathtozipfile.PHP_EOL."[OK]で消去後、新規作成します。" . PHP_EOL."[CANCEL]で中止します。", true) ){
@@ -139,15 +146,56 @@ class WindowsZip{
         finally{
             $za->close(); 
         }
-    } 
+        if( $this->encryption ){
+            $password = $this->password = $this->generate_password();
+            $bash = "expect -c \"spawn zipcloak ". $pathtozipfile . ";
+            expect \\\"Enter password\\\"; 
+            sleep 0.1;
+            send  \\\"". $password .  "\n\\\";
+            sleep 0.1;
+            expect \\\"Verify password\\\";
+            sleep 0.1;
+            send  \\\"". $password ."\n\\\";
+            sleep 0.1;
+            \"";
+            shell_exec($bash);
+
+            //クリップボードにコピー
+            $bash = "echo \"".$password ."\"| tr -d \"\\n\" | pbcopy";
+            shell_exec($bash);
+        }
+    }
+    // https://stackoverflow.com/questions/6101956/generating-a-random-password-in-php
+    public function generate_password($length = 16){
+        $chars =  'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#%&_+';
+        $str = '';
+        $max = strlen($chars) - 1;
+      
+        for ($i=0; $i < $length; $i++)
+          $str .= $chars[random_int(0, $max)];
+      
+        return $str;
+      } 
 }
 if( $argc == 1 ) {
     return ;
 }
+
+// 暗号化オプションを取得するため追加
+$shortopts = 'n:';
+$options = getopt($shortopts);
+
 try{
     $zip = new WindowsZip();
     //$zip->テキスト改行コンバート = false;
-    $zip->Create( $argv[1] );
+    if(isset($options['n'])) {
+        $zip->encryption = false;
+        $zip->Create($options['n']);
+    }
+    else{
+        $zip->Create( $argv[1] );
+    }
+    print("Password: ". $zip->password . "\n");
 }
 catch(Exception $e ){
     echo $e->getMessage() .PHP_EOL;
