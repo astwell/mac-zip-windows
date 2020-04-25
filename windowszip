@@ -1,4 +1,4 @@
-#!/usr/bin/php
+#!/usr/local/bin/php
 <?php
 /* ****************************************
 # mac zip alternative : windowszip 
@@ -69,7 +69,7 @@ class WindowsZip{
     }
     function addFile( &$za, $filePath, $localPath ){
         if( $this->テキスト改行コンバート && preg_match("/\.txt$/", $filePath ) ){
-            echo $filename . " text convert lf -> crlf " . PHP_EOL;
+            echo $filePath . " text convert lf -> crlf " . PHP_EOL;
             $contents = file_get_contents( $filePath );
             $contents = str_replace("\r", '', $contents );
             $contents = str_replace("\n", "\r\n", $contents );
@@ -147,7 +147,11 @@ class WindowsZip{
             $za->close(); 
         }
         if( $this->encryption ){
-            $password = $this->password = $this->generate_password();
+            if (isset($this->password)) {
+                $password = $this->password;
+            } else {
+                $password = $this->password = $this->generate_password();
+            }
             $bash = "expect -c \"spawn zipcloak ". $pathtozipfile . ";
             expect \\\"Enter password\\\"; 
             sleep 0.1;
@@ -182,19 +186,21 @@ if( $argc == 1 ) {
 }
 
 // 暗号化オプションを取得するため追加
-$shortopts = 'n:';
+$shortopts = 'e:n';
 $options = getopt($shortopts);
+echo var_dump($options);
+echo var_dump($argv);
+echo var_dump($argc);
 
 try{
     $zip = new WindowsZip();
     //$zip->テキスト改行コンバート = false;
     if(isset($options['n'])) {
         $zip->encryption = false;
-        $zip->Create($options['n']);
+    } elseif (isset($options['e'])) {
+        $zip->password = $options['e'];
     }
-    else{
-        $zip->Create( $argv[1] );
-    }
+    $zip->Create( $argv[$argc - 1] );
     print("Password: ". $zip->password . "\n");
 }
 catch(Exception $e ){
