@@ -188,9 +188,6 @@ if( $argc == 1 ) {
 // 暗号化オプションを取得するため追加
 $shortopts = 'e:n';
 $options = getopt($shortopts);
-echo var_dump($options);
-echo var_dump($argv);
-echo var_dump($argc);
 
 try{
     $zip = new WindowsZip();
