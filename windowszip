@@ -182,22 +182,30 @@ class WindowsZip{
       } 
 }
 if( $argc == 1 ) {
+    echo "usage: windowszip [-P PASSWORD] [-n] [ZIPFILE.zip] file\n";
     return ;
 }
 
 // 暗号化オプションを取得するため追加
-$shortopts = 'e:n';
+$shortopts = 'P:n';
 $options = getopt($shortopts);
+
+// 圧縮後のファイル
+$pathtozipfile = false;
 
 try{
     $zip = new WindowsZip();
     //$zip->テキスト改行コンバート = false;
     if(isset($options['n'])) {
         $zip->encryption = false;
-    } elseif (isset($options['e'])) {
-        $zip->password = $options['e'];
+    } elseif (isset($options['P'])) {
+        $zip->password = $options['P'];
     }
-    $zip->Create( $argv[$argc - 1] );
+
+    if(preg_match("/\.zip$/", $argv[$argc - 2] )) {
+        $pathtozipfile = $argv[$argc - 2];
+    }
+    $zip->Create( $argv[$argc - 1], $pathtozipfile );
     print("Password: ". $zip->password . "\n");
 }
 catch(Exception $e ){
